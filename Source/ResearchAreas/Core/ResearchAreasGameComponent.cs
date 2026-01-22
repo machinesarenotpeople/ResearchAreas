@@ -47,8 +47,17 @@ namespace ResearchAreas.Core
             // Refresh research cache
             ResearchChecker.RefreshCache();
             
-            // Validate and remove invalid areas
-            ValidateAreasOnLoad();
+            // Show compatibility dialog if needed
+            var settings = Settings.ResearchAreasMod.Settings;
+            if (settings != null && settings.showCompatibilityDialog && !settings.compatibilityDialogShown)
+            {
+                Find.WindowStack.Add(new UI.CompatibilityDialog());
+            }
+            else
+            {
+                // Validate and remove invalid areas
+                ValidateAreasOnLoad();
+            }
         }
 
         /// <summary>

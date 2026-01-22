@@ -67,6 +67,9 @@ namespace ResearchAreas.Core
             if (map == null || map.zoneManager == null)
                 return new List<string>();
 
+            var settings = Settings.ResearchAreasMod.Settings;
+            bool showWarnings = settings?.showRemovalWarnings ?? true;
+
             List<string> removedZones = new List<string>();
             List<Zone> zonesToRemove = new List<Zone>();
 
@@ -97,14 +100,16 @@ namespace ResearchAreas.Core
             foreach (Zone zone in zonesToRemove)
             {
                 string zoneLabel = zone.label;
+                int itemCount = zone.AllContainedThings.Count();
                 
-                // Check if zone has items/plants
-                if (zone.AllContainedThings.Any())
+                // Warn about items if enabled
+                if (showWarnings && itemCount > 0)
                 {
-                    Log.Warning($"ResearchAreas: Removing zone '{zoneLabel}' that contains items.");
+                    string warning = $"ResearchAreas: Removing zone '{zoneLabel}' that contains {itemCount} item(s). Items will be dropped on the ground.";
+                    Messages.Message(warning, MessageTypeDefOf.CautionInput);
                 }
 
-                // Remove the zone
+                // Remove the zone (items will be dropped automatically by RimWorld)
                 map.zoneManager.RemoveZone(zone);
                 removedZones.Add(zoneLabel);
             }
@@ -167,6 +172,10 @@ namespace ResearchAreas.Core
             if (Current.Game == null || Current.Game.Maps == null)
                 return results;
 
+            var settings = Settings.ResearchAreasMod.Settings;
+            if (settings != null && !settings.removeInvalidAreasOnLoad)
+                return results;
+
             foreach (Map map in Current.Game.Maps)
             {
                 if (map != null)
@@ -193,6 +202,18 @@ namespace ResearchAreas.Core
             }
 
             return results;
+        }
+
+        /// <summary>
+        /// Validate and remove invalid areas with warnings (for compatibility dialog).
+        /// </summary>
+        public static void ValidateAllMapsWithWarnings()
+        {
+            Dictionary<string, List<string>> removed = ValidateAllMaps();
+            if (removed.Count > 0)
+            {
+                NotifyPlayer(removed);
+            }
         }
 
         /// <summary>

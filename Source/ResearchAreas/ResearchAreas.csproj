@@ -38,6 +38,11 @@
     <Compile Include="Core\ResearchAreasGameComponent.cs" />
     <Compile Include="HarmonyPatches\AreaManagerPatches.cs" />
     <Compile Include="HarmonyPatches\ZoneManagerPatches.cs" />
+    <Compile Include="HarmonyPatches\UIPatches.cs" />
+    <Compile Include="HarmonyPatches\ResearchUIPatches.cs" />
     <Compile Include="UI\TooltipHandler.cs" />
+    <Compile Include="UI\CompatibilityDialog.cs" />
+    <Compile Include="Settings\ResearchAreasSettings.cs" />
+    <Compile Include="Compatibility\ModCompatibility.cs" />
   </ItemGroup>
 </Project>

@@ -12,6 +12,11 @@ namespace ResearchAreas.Core
     {
         private static Dictionary<string, ResearchProjectDef> areaResearchMap;
         private static Dictionary<string, bool> researchCache;
+        
+        // Cache zone-to-area mappings for performance
+        private static Dictionary<Area, string> areaTypeCache = new Dictionary<Area, string>();
+        private static Dictionary<Zone, string> zoneTypeCache = new Dictionary<Zone, string>();
+        private static int lastMapUpdateTick = -1;
 
         /// <summary>
         /// Initialize the mapping between area types and research projects.
@@ -59,11 +64,45 @@ namespace ResearchAreas.Core
             if (string.IsNullOrEmpty(areaKey))
                 return true; // Unknown area types are allowed by default
 
+            // Check if research is required via settings
+            if (Settings.ResearchAreasMod.Settings != null && !IsResearchRequired(areaKey))
+                return true;
+
             ResearchProjectDef requiredResearch = GetRequiredResearch(areaKey);
             if (requiredResearch == null)
                 return true; // No research required for this area type
 
             return IsResearchCompleted(requiredResearch);
+        }
+
+        /// <summary>
+        /// Check if research is required for an area type based on settings.
+        /// </summary>
+        private static bool IsResearchRequired(string areaKey)
+        {
+            if (Settings.ResearchAreasMod.Settings == null)
+                return true; // Default to requiring research if settings not loaded
+
+            var settings = Settings.ResearchAreasMod.Settings;
+            
+            switch (areaKey)
+            {
+                case "Stockpile":
+                    return settings.requireStockpileResearch;
+                case "Growing":
+                    return settings.requireGrowingResearch;
+                case "AnimalSleeping":
+                case "AnimalAllowed":
+                    return settings.requireAnimalResearch;
+                case "Home":
+                    return settings.requireHomeResearch;
+                case "NoRoof":
+                    return settings.requireNoRoofResearch;
+                case "Allowed":
+                    return settings.requireAllowedResearch;
+                default:
+                    return true;
+            }
         }
 
         /// <summary>
@@ -123,7 +162,7 @@ namespace ResearchAreas.Core
         }
 
         /// <summary>
-        /// Get the area type key for an area.
+        /// Get the area type key for an area (with caching).
         /// </summary>
         /// <param name="area">The area</param>
         /// <returns>The area type key</returns>
@@ -132,52 +171,72 @@ namespace ResearchAreas.Core
             if (area == null)
                 return null;
 
+            // Check cache first
+            if (areaTypeCache.TryGetValue(area, out string cachedKey))
+            {
+                return cachedKey;
+            }
+
             // Home area is handled separately in IsAreaAllowed
             Map map = Find.CurrentMap;
             if (map != null && map.areaManager != null && area == map.areaManager.Home)
+            {
+                areaTypeCache[area] = "Home";
                 return "Home";
+            }
 
             // Check area label - Rimworld areas are identified by their labels
             string label = area.Label?.ToLower() ?? "";
+            string areaKey = null;
             
             // Home area (by label)
             if (label == "home")
-                return "Home";
-            
+                areaKey = "Home";
             // Stockpile areas - check label and associated zones
-            if (label.Contains("stockpile"))
-                return "Stockpile";
-            
+            else if (label.Contains("stockpile"))
+                areaKey = "Stockpile";
             // Growing zones - check label and associated zones
-            if (label.Contains("growing"))
-                return "Growing";
-            
+            else if (label.Contains("growing"))
+                areaKey = "Growing";
             // Animal sleeping areas
-            if (label.Contains("animal") && label.Contains("sleeping"))
-                return "AnimalSleeping";
-            
+            else if (label.Contains("animal") && label.Contains("sleeping"))
+                areaKey = "AnimalSleeping";
             // Animal allowed areas
-            if (label.Contains("animal") && label.Contains("allowed"))
-                return "AnimalAllowed";
-            
+            else if (label.Contains("animal") && label.Contains("allowed"))
+                areaKey = "AnimalAllowed";
             // No roof areas
-            if (label.Contains("no roof") || label.Contains("noroof") || label.Contains("no-roof"))
-                return "NoRoof";
-
+            else if (label.Contains("no roof") || label.Contains("noroof") || label.Contains("no-roof"))
+                areaKey = "NoRoof";
             // Check if this area is associated with a zone (more reliable detection)
-            // This is a fallback for areas that might be created with custom names
-            if (map != null && map.zoneManager != null)
+            else if (map != null && map.zoneManager != null)
             {
                 try
                 {
+                    // Update zone cache if needed
+                    UpdateZoneCache(map);
+                    
                     foreach (Zone zone in map.zoneManager.AllZones)
                     {
                         if (zone.label == area.Label)
                         {
+                            if (zoneTypeCache.TryGetValue(zone, out string zoneKey))
+                            {
+                                areaKey = zoneKey;
+                                break;
+                            }
+                            
                             if (zone is Zone_Stockpile)
-                                return "Stockpile";
+                            {
+                                areaKey = "Stockpile";
+                                zoneTypeCache[zone] = "Stockpile";
+                                break;
+                            }
                             if (zone is Zone_Growing)
-                                return "Growing";
+                            {
+                                areaKey = "Growing";
+                                zoneTypeCache[zone] = "Growing";
+                                break;
+                            }
                         }
                     }
                 }
@@ -188,7 +247,48 @@ namespace ResearchAreas.Core
             }
 
             // Default: treat as custom allowed area (requires Allowed research)
-            return "Allowed";
+            if (areaKey == null)
+                areaKey = "Allowed";
+
+            // Cache the result
+            areaTypeCache[area] = areaKey;
+            return areaKey;
+        }
+
+        /// <summary>
+        /// Update the zone type cache for a map.
+        /// </summary>
+        private static void UpdateZoneCache(Map map)
+        {
+            if (map == null || map.zoneManager == null)
+                return;
+
+            int currentTick = Find.TickManager?.TicksGame ?? 0;
+            
+            // Only update cache if map has changed or cache is stale
+            if (lastMapUpdateTick == currentTick && zoneTypeCache.Count > 0)
+                return;
+
+            lastMapUpdateTick = currentTick;
+            zoneTypeCache.Clear();
+
+            foreach (Zone zone in map.zoneManager.AllZones)
+            {
+                if (zone is Zone_Stockpile)
+                    zoneTypeCache[zone] = "Stockpile";
+                else if (zone is Zone_Growing)
+                    zoneTypeCache[zone] = "Growing";
+            }
+        }
+
+        /// <summary>
+        /// Clear all caches (call when areas/zones are added/removed).
+        /// </summary>
+        public static void ClearCaches()
+        {
+            areaTypeCache.Clear();
+            zoneTypeCache.Clear();
+            lastMapUpdateTick = -1;
         }
 
         /// <summary>
@@ -200,6 +300,7 @@ namespace ResearchAreas.Core
             {
                 researchCache.Clear();
             }
+            ClearCaches();
         }
 
         /// <summary>
