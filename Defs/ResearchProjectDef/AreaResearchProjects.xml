@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+    <!-- Stockpile Areas -->
+    <ResearchProjectDef>
+        <defName>ResearchAreas_Stockpiles</defName>
+        <label>Stockpile Management</label>
+        <description>Research the fundamentals of organizing and designating storage areas for materials and items.</description>
+        <baseCost>100</baseCost>
+        <techLevel>Neolithic</techLevel>
+        <tab>ResearchTab</tab>
+    </ResearchProjectDef>
+
+    <!-- Growing Zones -->
+    <ResearchProjectDef>
+        <defName>ResearchAreas_GrowingZones</defName>
+        <label>Agricultural Planning</label>
+        <description>Learn to designate and manage areas for crop cultivation and farming.</description>
+        <baseCost>200</baseCost>
+        <techLevel>Neolithic</techLevel>
+        <tab>ResearchTab</tab>
+    </ResearchProjectDef>
+
+    <!-- Animal Areas -->
+    <ResearchProjectDef>
+        <defName>ResearchAreas_AnimalAreas</defName>
+        <label>Animal Husbandry</label>
+        <description>Develop techniques for managing animal territories and sleeping areas.</description>
+        <baseCost>300</baseCost>
+        <techLevel>Neolithic</techLevel>
+        <tab>ResearchTab</tab>
+    </ResearchProjectDef>
+
+    <!-- Home Areas -->
+    <ResearchProjectDef>
+        <defName>ResearchAreas_Home</defName>
+        <label>Settlement Planning</label>
+        <description>Master the art of designating home territories and settlement boundaries for firefighting and defense.</description>
+        <baseCost>200</baseCost>
+        <techLevel>Neolithic</techLevel>
+        <tab>ResearchTab</tab>
+    </ResearchProjectDef>
+
+    <!-- No Roof Areas -->
+    <ResearchProjectDef>
+        <defName>ResearchAreas_NoRoof</defName>
+        <label>Complex Roofing</label>
+        <description>Learn to designate areas for temperature regulation.</description>
+        <baseCost>300</baseCost>
+        <techLevel>Neolithic</techLevel>
+        <tab>ResearchTab</tab>
+    </ResearchProjectDef>
+
+    <!-- Allowed Areas (Custom Zones) -->
+    <ResearchProjectDef>
+        <defName>ResearchAreas_Allowed</defName>
+        <label>Social Organization</label>
+        <description>Unlock the ability to create custom allowed areas for precise colonist movement control and social organization.</description>
+        <baseCost>600</baseCost>
+        <techLevel>Neolithic</techLevel>
+        <tab>ResearchTab</tab>
+        <prerequisites>
+            <li>ResearchAreas_Home</li>
+        </prerequisites>
+    </ResearchProjectDef>
+</Defs>
