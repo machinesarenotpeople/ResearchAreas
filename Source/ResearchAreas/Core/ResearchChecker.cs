@@ -163,6 +163,7 @@ namespace ResearchAreas.Core
 
         /// <summary>
         /// Get the area type key for an area (with caching).
+        /// Prioritizes zone type checking over label matching for better reliability.
         /// </summary>
         /// <param name="area">The area</param>
         /// <returns>The area type key</returns>
@@ -177,54 +178,53 @@ namespace ResearchAreas.Core
                 return cachedKey;
             }
 
-            // Home area is handled separately in IsAreaAllowed
             Map map = Find.CurrentMap;
-            if (map != null && map.areaManager != null && area == map.areaManager.Home)
+            if (map == null)
+                return null;
+
+            // Home area is handled separately in IsAreaAllowed
+            if (map.areaManager != null && area == map.areaManager.Home)
             {
                 areaTypeCache[area] = "Home";
                 return "Home";
             }
 
-            // Check area label - Rimworld areas are identified by their labels
-            string label = area.Label?.ToLower() ?? "";
             string areaKey = null;
-            
-            // Home area (by label)
-            if (label == "home")
-                areaKey = "Home";
-            // Stockpile areas - check label and associated zones
-            else if (label.Contains("stockpile"))
-                areaKey = "Stockpile";
-            // Growing zones - check label and associated zones
-            else if (label.Contains("growing"))
-                areaKey = "Growing";
-            // Animal sleeping areas
-            else if (label.Contains("animal") && label.Contains("sleeping"))
-                areaKey = "AnimalSleeping";
-            // Animal allowed areas
-            else if (label.Contains("animal") && label.Contains("allowed"))
-                areaKey = "AnimalAllowed";
-            // No roof areas
-            else if (label.Contains("no roof") || label.Contains("noroof") || label.Contains("no-roof"))
-                areaKey = "NoRoof";
-            // Check if this area is associated with a zone (more reliable detection)
-            else if (map != null && map.zoneManager != null)
+            string label = area.Label?.ToLower() ?? "";
+
+            // Step 1: Check custom area name mappings first (highest priority)
+            if (Settings.ResearchAreasMod.Settings != null && 
+                Settings.ResearchAreasMod.Settings.customAreaMappings != null &&
+                Settings.ResearchAreasMod.Settings.customAreaMappings.Count > 0)
+            {
+                if (Settings.ResearchAreasMod.Settings.customAreaMappings.TryGetValue(label, out string mappedType))
+                {
+                    areaTypeCache[area] = mappedType;
+                    return mappedType;
+                }
+            }
+
+            // Step 2: Check zone types directly (most reliable method)
+            if (map.zoneManager != null)
             {
                 try
                 {
                     // Update zone cache if needed
                     UpdateZoneCache(map);
                     
+                    // Check if this area is associated with a zone by matching label
                     foreach (Zone zone in map.zoneManager.AllZones)
                     {
                         if (zone.label == area.Label)
                         {
+                            // Check zone type cache first
                             if (zoneTypeCache.TryGetValue(zone, out string zoneKey))
                             {
                                 areaKey = zoneKey;
                                 break;
                             }
                             
+                            // Check zone type directly
                             if (zone is Zone_Stockpile)
                             {
                                 areaKey = "Stockpile";
@@ -242,11 +242,34 @@ namespace ResearchAreas.Core
                 }
                 catch
                 {
-                    // If we can't access zones, continue with default logic
+                    // If we can't access zones, continue with label-based detection
                 }
             }
 
-            // Default: treat as custom allowed area (requires Allowed research)
+            // Step 3: Fall back to label-based detection (less reliable but necessary for areas without zones)
+            if (areaKey == null)
+            {
+                // Home area (by label)
+                if (label == "home")
+                    areaKey = "Home";
+                // Stockpile areas
+                else if (label.Contains("stockpile"))
+                    areaKey = "Stockpile";
+                // Growing zones
+                else if (label.Contains("growing"))
+                    areaKey = "Growing";
+                // Animal sleeping areas
+                else if (label.Contains("animal") && label.Contains("sleeping"))
+                    areaKey = "AnimalSleeping";
+                // Animal allowed areas
+                else if (label.Contains("animal") && label.Contains("allowed"))
+                    areaKey = "AnimalAllowed";
+                // No roof areas
+                else if (label.Contains("no roof") || label.Contains("noroof") || label.Contains("no-roof"))
+                    areaKey = "NoRoof";
+            }
+
+            // Step 4: Default to custom allowed area if still unknown
             if (areaKey == null)
                 areaKey = "Allowed";
 
@@ -282,7 +305,7 @@ namespace ResearchAreas.Core
         }
 
         /// <summary>
-        /// Clear all caches (call when areas/zones are added/removed).
+        /// Clear all caches (call when areas/zones are added/removed or custom mappings change).
         /// </summary>
         public static void ClearCaches()
         {

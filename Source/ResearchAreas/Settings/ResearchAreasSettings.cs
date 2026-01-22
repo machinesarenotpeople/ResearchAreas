@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace ResearchAreas.Settings
@@ -28,6 +30,9 @@ namespace ResearchAreas.Settings
         public bool showTooltips = true;
         public bool showVisualIndicators = true;
 
+        // Custom area name mappings (area label -> area type key)
+        public Dictionary<string, string> customAreaMappings = new Dictionary<string, string>();
+
         public override void ExposeData()
         {
             base.ExposeData();
@@ -51,6 +56,13 @@ namespace ResearchAreas.Settings
             // UI settings
             Scribe_Values.Look(ref showTooltips, "showTooltips", true);
             Scribe_Values.Look(ref showVisualIndicators, "showVisualIndicators", true);
+
+            // Custom area mappings
+            Scribe_Collections.Look(ref customAreaMappings, "customAreaMappings", LookMode.Value, LookMode.Value);
+            if (customAreaMappings == null)
+            {
+                customAreaMappings = new Dictionary<string, string>();
+            }
         }
     }
 
@@ -94,6 +106,43 @@ namespace ResearchAreas.Settings
 
             Settings.showTooltips = listing.CheckboxLabeled("Show Tooltips", Settings.showTooltips, "Show tooltips explaining research requirements");
             Settings.showVisualIndicators = listing.CheckboxLabeled("Show Visual Indicators", Settings.showVisualIndicators, "Show visual indicators (grayed out buttons, lock icons) for locked areas");
+
+            listing.Gap();
+            listing.Label("Custom Area Name Mappings");
+            listing.GapLine();
+            listing.Label("Map custom area names to area types. Examples: MyStockpile=Stockpile, FarmZone=Growing", -1f);
+            listing.Gap(4f);
+
+            // Display current mappings
+            if (Settings.customAreaMappings != null && Settings.customAreaMappings.Count > 0)
+            {
+                var mappingsToRemove = new List<string>();
+                foreach (var kvp in Settings.customAreaMappings)
+                {
+                    Rect rowRect = listing.GetRect(24f);
+                    Rect labelRect = new Rect(rowRect.x, rowRect.y, rowRect.width - 110f, 24f);
+                    Rect buttonRect = new Rect(rowRect.xMax - 100f, rowRect.y, 100f, 24f);
+                    
+                    Widgets.Label(labelRect, $"{kvp.Key} → {kvp.Value}");
+                    if (Widgets.ButtonText(buttonRect, "Remove"))
+                    {
+                        mappingsToRemove.Add(kvp.Key);
+                    }
+                    listing.Gap(2f);
+                }
+                foreach (var key in mappingsToRemove)
+                {
+                    Settings.customAreaMappings.Remove(key);
+                    // Clear area detection cache since mappings changed
+                    Core.ResearchChecker.ClearCaches();
+                }
+                listing.Gap(4f);
+            }
+
+            if (listing.ButtonText("Add Custom Mapping"))
+            {
+                Find.WindowStack.Add(new UI.CustomAreaMappingDialog());
+            }
 
             listing.End();
             base.DoSettingsWindowContents(inRect);

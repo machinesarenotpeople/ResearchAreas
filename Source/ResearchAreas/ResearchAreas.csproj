@@ -42,6 +42,7 @@
     <Compile Include="HarmonyPatches\ResearchUIPatches.cs" />
     <Compile Include="UI\TooltipHandler.cs" />
     <Compile Include="UI\CompatibilityDialog.cs" />
+    <Compile Include="UI\CustomAreaMappingDialog.cs" />
     <Compile Include="Settings\ResearchAreasSettings.cs" />
     <Compile Include="Compatibility\ModCompatibility.cs" />
   </ItemGroup>
