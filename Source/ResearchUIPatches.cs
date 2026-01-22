@@ -28,8 +28,8 @@ namespace ResearchAreas.HarmonyPatches
             bool first = true;
 
             // Check each area type
-            string[] areaTypes = { "Stockpile", "Growing", "AnimalSleeping", "AnimalAllowed", "Home", "NoRoof", "Allowed" };
-            string[] areaLabels = { "Stockpile zones", "Growing zones", "Animal areas", "Animal areas", "Home area", "No-roof areas", "Custom allowed areas" };
+            string[] areaTypes = { "Stockpile", "Growing", "Home", "NoRoof", "Allowed" };
+            string[] areaLabels = { "Stockpile zones", "Growing zones", "Home area", "No-roof areas", "Custom allowed areas" };
 
             for (int i = 0; i < areaTypes.Length; i++)
             {
@@ -55,7 +55,7 @@ namespace ResearchAreas.HarmonyPatches
                 return null;
 
             List<string> unlockedTypes = new List<string>();
-            string[] areaTypes = { "Stockpile", "Growing", "AnimalSleeping", "AnimalAllowed", "Home", "NoRoof", "Allowed" };
+            string[] areaTypes = { "Stockpile", "Growing", "Home", "NoRoof", "Allowed" };
 
             foreach (string areaType in areaTypes)
             {
@@ -85,10 +85,6 @@ namespace ResearchAreas.HarmonyPatches
                     break;
                 case "Growing":
                     iconPath = "UI/Designators/ZoneCreate_Growing";
-                    break;
-                case "AnimalSleeping":
-                case "AnimalAllowed":
-                    iconPath = "UI/Designators/ZoneCreate_Pen";
                     break;
                 case "Home":
                     iconPath = "UI/Overlays/HomeArea";
@@ -153,7 +149,9 @@ namespace ResearchAreas.HarmonyPatches
 
         /// <summary>
         /// Patch research node drawing to add tooltip with unlocked areas and icons.
+        /// NOTE: Disabled due to method signature mismatch in RimWorld 1.6.
         /// </summary>
+        /*
         [HarmonyPatch(typeof(MainTabWindow_Research), "DrawResearchNode")]
         [HarmonyPostfix]
         public static void MainTabWindow_Research_DrawResearchNode_Postfix(Rect rect, ResearchProjectDef research)
@@ -209,10 +207,13 @@ namespace ResearchAreas.HarmonyPatches
                 TooltipHandler.TipRegion(rect, tooltip);
             }
         }
+        */
 
         /// <summary>
         /// Alternative patch for research tree mods that might use different UI.
+        /// NOTE: Disabled due to method signature mismatch in RimWorld 1.6.
         /// </summary>
+        /*
         [HarmonyPatch(typeof(ResearchProjectDef), "GetDescription")]
         [HarmonyPostfix]
         public static void ResearchProjectDef_GetDescription_Postfix(ResearchProjectDef __instance, ref string __result)
@@ -226,5 +227,6 @@ namespace ResearchAreas.HarmonyPatches
                 __result += $"\n\nUnlocks: {unlockedAreas}";
             }
         }
+        */
     }
 }

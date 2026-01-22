@@ -1,78 +1,132 @@
 # ResearchAreas Mod - AI Coding Agent Instructions
 
 ## Project Overview
-ResearchAreas is a RimWorld 1.6 mod that gates area/zone creation (Stockpiles, Growing Zones, Animal Areas, etc.) behind research projects. The core mechanism: Harmony patches intercept area/zone registration, validate research completion via `ResearchChecker`, and block creation with user feedback if required research is incomplete.
+ResearchAreas is a RimWorld 1.6 mod that gates zone creation (Stockpiles, Growing Zones) behind research projects. The core mechanism: Harmony patches intercept zone registration via `ZoneManager.RegisterZone()`, validate research completion via `ResearchChecker`, and block creation with user feedback if required research is incomplete.
+
+## Current Status
+
+**✅ WORKING:**
+- Stockpile Zone research gating
+- Growing Zone research gating
+
+**❌ NOT WORKING (Requires RimWorld Assembly Decompilation):**
+- Home Area, Allowed Area, NoRoof Area (designator methods/classes undefined in RimWorld 1.6)
+- Animal Zones (do not exist in RimWorld 1.6)
 
 ## Architecture Pattern: Research Gating Pipeline
 
-The mod follows a specific flow:
-1. **User attempts area creation** → 2. **Harmony Prefix patch fires** → 3. **ResearchChecker validates** → 4. **Block (return false) or allow (return true)**
+The mod follows a specific flow for zones:
+1. **User designates zone** → 2. **ZoneManager.RegisterZone() called** → 3. **Harmony Prefix patch fires** → 4. **ResearchChecker validates** → 5. **Block (return false) or allow (return true)**
 
-Key components:
-- **ResearchChecker** (static utility): Central validation hub. Maintains `areaResearchMap` (area type → ResearchProjectDef) and caches research completion status. Always call `RefreshCache()` after research completion events.
-- **ResearchAreasGameComponent** (GameComponent): Lifecycle handler. Calls `AreaRemover.ValidateAllMaps()` on load to purge areas lacking research. Manages periodic cache refresh.
-- **Harmony Patches** (ZoneManagerPatches, UIPatches): `ZoneManager.RegisterZone()` Prefix blocks zone creation. UI Postfixes add tooltips/lock icons for UX feedback.
-- **AreaRemover**: Scans all maps on load, identifies areas without required research (skips Home), removes them, notifies player.
-- **ResearchAreasSettings**: Persists via `ExposeData()` using RimWorld's `Scribe_*` system. User-configurable toggles stored here.
+### Core Components
 
-## Adding a New Area Type (Step-by-Step)
+- **ResearchChecker** (`Source/ResearchChecker.cs`): Central validation hub. Maintains `areaResearchMap` (area type string → ResearchProjectDef) and caches research completion status via `researchCache`.
+  - Key methods: `GetRequiredResearch(areaKey)`, `IsResearchCompleted(research)`, `RefreshCache()`
+  - Always call `RefreshCache()` after research completion events
 
-1. **Register mapping in ResearchChecker.cs**:
+- **ResearchAreasGameComponent** (`Source/ResearchAreasGameComponent.cs`): Lifecycle handler.
+  - `FinalizeInit()`: Called on game load; calls `AreaRemover.ValidateAllMaps()` to purge zones lacking research
+
+- **ZoneManagerPatches** (`Source/ZoneManagerPatches.cs`): Main Harmony patch.
+  - Patches: `ZoneManager.RegisterZone()` with Prefix
+  - Checks incoming zone type (Zone_Stockpile, Zone_Growing)
+  - Blocks creation (return false) if research incomplete; allows (return true) otherwise
+
+- **AreaRemover** (`Source/AreaRemover.cs`): Cleanup on load.
+  - Scans all zones on all maps
+  - Removes zones lacking required research
+  - Sends player notification
+
+- **ResearchAreasSettings** (`Source/ResearchAreasSettings.cs`): Configuration persistence.
+  - Per-area toggles (requireStockpileResearch, requireGrowingResearch, etc.)
+  - Persisted via `ExposeData()` using RimWorld's `Scribe_Values.Look(ref field, "xmlKey", default)`
+
+## Adding Zone Types (For Future Work)
+
+To gate additional zone types:
+
+1. **Register mapping in ResearchChecker.cs** `InitializeMapping()`:
    ```csharp
-   areaResearchMap.Add("YourAreaKey", DefDatabase<ResearchProjectDef>.GetNamed("ResearchAreas_YourKey", false));
+   areaResearchMap.Add("YourZoneKey", DefDatabase<ResearchProjectDef>.GetNamed("ResearchAreas_YourKey", false));
    ```
-   Use the area's C# class name (e.g., "Stockpile" for Zone_Stockpile, "Growing" for Zone_Growing) as the key.
+   Use the zone's C# class name (e.g., "Stockpile" for Zone_Stockpile) as the key.
 
-2. **Create ResearchProjectDef in XML** (`Defs/ResearchProjectDef/AreaResearchProjects.xml`):
+2. **Create ResearchProjectDef** in `Defs/ResearchProjectDef/AreaResearchProjects.xml`:
    ```xml
    <ResearchProjectDef>
        <defName>ResearchAreas_YourKey</defName>
-       <label>Your Research Label</label>
+       <label>Your Zone Research Label</label>
        <baseCost>250</baseCost>
        <techLevel>Neolithic</techLevel>
+       <tab>ResearchAreas_AreaManagement</tab>
    </ResearchProjectDef>
    ```
 
-3. **Add Harmony patch if needed** (e.g., for custom zone types not covered by `Zone_Stockpile`/`Zone_Growing`):
+3. **Add zone type check in ZoneManagerPatches.cs** `Prefix()` method:
    ```csharp
-   if (newZone is YourCustomZone) {
-       areaKey = "YourAreaKey";
+   else if (newZone is Zone_YourType) {
+       areaKey = "YourZoneKey";
        requiredResearch = Core.ResearchChecker.GetRequiredResearch(areaKey);
    }
    ```
 
+## Adding Area Types (Requires Decompilation)
+
+For non-zone areas (Home, Allowed, NoRoof), the designator method names could not be found through normal means.
+
+**Required Next Steps:**
+1. Decompile `Assembly-CSharp.dll` using dnSpy or ILSpy
+2. Search for classes: `Designator_AreaAllowedGrow`, `Designator_AreaNoRoof`, `Designator_AreaHomeToggle`
+3. Identify the method called when these designators create/modify areas
+4. Update AreaManagerPatches.cs with the correct class and method names
+5. Implement Prefix patches similar to the zone patches
+
+**Known Challenge**: RimWorld 1.6's designator API differs significantly from earlier versions. Direct patching points are not documented.
+
 ## Critical Conventions
 
 ### Caching
-ResearchChecker maintains:
-- `researchCache`: bool map of research def names → completion status
-- `areaTypeCache` / `zoneTypeCache`: instance → type key mappings
+ResearchChecker maintains two caches:
+- `researchCache`: Map of research def names → bool (completion status)
+- `areaTypeCache`: Zone instance → string (area type key)
 
-**Never assume cache is current.** Always call `ResearchChecker.RefreshCache()` after:
-- Research completion (via GameComponent.GameComponentTick or event patches)
-- Game load (ResearchAreasGameComponent.FinalizeInit)
-- Testing in development
+**Cache Staleness Risk**: Cache is initialized on load and only refreshed explicitly.
+- Always call `ResearchChecker.RefreshCache()` after research events
+- GameComponent calls this on load via `FinalizeInit()`
 
 ### Harmony Prefix Returns
-- `return true` → allow original method to execute
-- `return false` → block and skip original method (used to prevent invalid area creation)
+- `return true` → Allow original method to execute
+- `return false` → Block/skip original method (prevents zone creation)
 
-Return false + `Messages.Message()` for user feedback.
+When blocking, pair with `Messages.Message()` for user feedback.
 
-### Settings Persistence
-All configuration lives in ResearchAreasSettings. Use `ExposeData()` pattern:
+### Settings Persistence Pattern
+Use RimWorld's `Scribe_*` system in `ExposeData()`:
 ```csharp
-Scribe_Values.Look(ref boolField, "xmlKey", defaultValue);
+Scribe_Values.Look(ref requireStockpileResearch, "requireStockpileResearch", true);
 ```
-RimWorld handles the XML save/load transparently.
+RimWorld handles XML serialization automatically.
 
 ## Mod Data (XML) Structure
-- Research defs: `Defs/ResearchProjectDef/AreaResearchProjects.xml`
-- Game component registration: `Defs/GameComponentDef/ResearchAreasGameComponent.xml`
-- These are RimWorld content files, NOT in the C# project
+- Research definitions: `Defs/ResearchProjectDef/AreaResearchProjects.xml`
+- Research tab definition: `Defs/ResearchTabDef/ResearchTabs.xml` (custom "Area Management" tab)
+- These are RimWorld content files (NOT in Source/); loaded by RimWorld on startup
 
-## Build & Test
-- **Build**: `dotnet build` in Source/ → outputs to `Assemblies/ResearchAreas.dll`
-- **Run**: Load in RimWorld with Harmony mod enabled
-- **Debug**: Use `Log.Message()` and RimWorld's in-game debug mode (Ctrl+F12)
-- **Cache issues**: If behavior seems stale, call `ResearchChecker.RefreshCache()` manually
+## Build & Test Workflow
+- **Build**: `dotnet build` in `Source/` → outputs to `Assemblies/ResearchAreas.dll`
+- **Run**: Load mod in RimWorld (requires Harmony mod as dependency)
+- **Debug**: Use `Log.Message()` for console output; RimWorld debug mode (Ctrl+F12) for in-game inspection
+- **Cache debugging**: Call `ResearchChecker.RefreshCache()` manually if behavior seems stale
+- **Harmony errors**: Check RimWorld log if patch fails to apply; verify method signatures match exactly
+
+## Known Limitations (RimWorld 1.6 API Constraints)
+- **Animal zone types**: `Zone_AnimalSleeping` and `Zone_AnimalAllowed` do not appear to exist as separate classes in RimWorld 1.6
+- **Area designators**: Home, Allowed, NoRoof areas use designator-based creation, not `ZoneManager.RegisterZone()`
+- **Home area**: Intentionally NOT gated (always available per RimWorld convention)
+- **UI patches disabled**: Method signatures on designators/research UI don't match RimWorld 1.6 API expectations
+
+## Development References
+- RimWorld 1.6.4633 rev1261
+- .NET Framework 4.7.2
+- HarmonyLib 0Harmony (from Steam Workshop)
+- Target assembly: `Assembly-CSharp.dll` (RimWorld core)

@@ -35,11 +35,11 @@ namespace ResearchAreas.Core
             {
                 { "Stockpile", DefDatabase<ResearchProjectDef>.GetNamed("ResearchAreas_Stockpiles", false) },
                 { "Growing", DefDatabase<ResearchProjectDef>.GetNamed("ResearchAreas_GrowingZones", false) },
-                { "AnimalSleeping", DefDatabase<ResearchProjectDef>.GetNamed("ResearchAreas_AnimalAreas", false) },
-                { "AnimalAllowed", DefDatabase<ResearchProjectDef>.GetNamed("ResearchAreas_AnimalAreas", false) },
                 { "Home", DefDatabase<ResearchProjectDef>.GetNamed("ResearchAreas_Home", false) },
                 { "NoRoof", DefDatabase<ResearchProjectDef>.GetNamed("ResearchAreas_NoRoof", false) },
-                { "Allowed", DefDatabase<ResearchProjectDef>.GetNamed("ResearchAreas_Allowed", false) }
+                { "Allowed", DefDatabase<ResearchProjectDef>.GetNamed("ResearchAreas_Allowed", false) },
+                { "SnowClear", DefDatabase<ResearchProjectDef>.GetNamed("ResearchAreas_SnowRemovalPlanning", false) },
+                { "Pollution", DefDatabase<ResearchProjectDef>.GetNamed("ResearchAreas_PollutionRemoval", false) }
             };
 
             researchCache = new Dictionary<string, bool>();
@@ -53,11 +53,6 @@ namespace ResearchAreas.Core
         public static bool IsAreaAllowed(Area area)
         {
             if (area == null)
-                return true;
-
-            // Home area is always allowed - it's a special system area
-            Map map = Find.CurrentMap;
-            if (map != null && map.areaManager != null && area == map.areaManager.Home)
                 return true;
 
             string areaKey = GetAreaKey(area);
@@ -91,15 +86,16 @@ namespace ResearchAreas.Core
                     return settings.requireStockpileResearch;
                 case "Growing":
                     return settings.requireGrowingResearch;
-                case "AnimalSleeping":
-                case "AnimalAllowed":
-                    return settings.requireAnimalResearch;
                 case "Home":
                     return settings.requireHomeResearch;
                 case "NoRoof":
                     return settings.requireNoRoofResearch;
                 case "Allowed":
                     return settings.requireAllowedResearch;
+                case "SnowClear":
+                    return settings.requireSnowRemovalResearch;
+                case "Pollution":
+                    return settings.requirePollutionRemovalResearch;
                 default:
                     return true;
             }
@@ -350,6 +346,33 @@ namespace ResearchAreas.Core
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Apply configured costs from settings to research projects.
+        /// </summary>
+        public static void ApplyConfiguredCosts()
+        {
+            var settings = Settings.ResearchAreasMod.Settings;
+            
+            if (areaResearchMap == null)
+                return;
+
+            // Apply costs from settings
+            if (areaResearchMap.TryGetValue("Stockpile", out var stockpileResearch) && stockpileResearch != null)
+                stockpileResearch.baseCost = settings.costPottery;
+            if (areaResearchMap.TryGetValue("Home", out var homeResearch) && homeResearch != null)
+                homeResearch.baseCost = settings.costDomestication;
+            if (areaResearchMap.TryGetValue("Growing", out var growingResearch) && growingResearch != null)
+                growingResearch.baseCost = settings.costAgriculture;
+            if (areaResearchMap.TryGetValue("SnowClear", out var snowResearch) && snowResearch != null)
+                snowResearch.baseCost = settings.costShoveling;
+            if (areaResearchMap.TryGetValue("NoRoof", out var roofResearch) && roofResearch != null)
+                roofResearch.baseCost = settings.costComplexRoofing;
+            if (areaResearchMap.TryGetValue("Pollution", out var pollutionResearch) && pollutionResearch != null)
+                pollutionResearch.baseCost = settings.costSanitation;
+            if (areaResearchMap.TryGetValue("Allowed", out var allowedResearch) && allowedResearch != null)
+                allowedResearch.baseCost = settings.costGovernment;
         }
     }
 }

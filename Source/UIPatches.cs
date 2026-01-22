@@ -7,10 +7,13 @@ namespace ResearchAreas.HarmonyPatches
 {
     /// <summary>
     /// UI patches for tooltips and visual indicators on area creation buttons.
+    /// NOTE: These patches are disabled due to method signature mismatches in RimWorld 1.6.
+    /// The core research gating functionality works through ZoneManagerPatches.
     /// </summary>
     [HarmonyPatch]
     public static class UIPatches
     {
+        /*
         /// <summary>
         /// Patch to add tooltips to area selection buttons.
         /// This patches the area allowed GUI to show research requirements.
@@ -116,5 +119,6 @@ namespace ResearchAreas.HarmonyPatches
                 }
             }
         }
+        */
     }
 }

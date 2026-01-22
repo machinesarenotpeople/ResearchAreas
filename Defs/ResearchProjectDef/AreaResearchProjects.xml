@@ -1,63 +1,120 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Defs>
-    <!-- Stockpile Areas -->
+    <!-- Tier 1: Core Area Management (Cost: 100-200) -->
+    
+    <!-- Organized Storage -->
     <ResearchProjectDef>
         <defName>ResearchAreas_Stockpiles</defName>
-        <label>Stockpile Management</label>
-        <description>Research the fundamentals of organizing and designating storage areas for materials and items.</description>
+        <label>Organized Storage</label>
+        <description>Your people discover how to create and manage organized storage areas. Whether through crafted containers or careful arrangement, resources can be preserved, protected, and easily found when needed.
+
+Unlocks:
+• Stockpile Zone creation and management</description>
         <baseCost>100</baseCost>
         <techLevel>Neolithic</techLevel>
-        <tab>ResearchTab</tab>
+        <tab>ResearchAreas_AreaManagement</tab>
+        <iconPath>UI/Designators/ZoneCreate_Stockpile</iconPath>
+        <researchViewX>0.00</researchViewX>
+        <researchViewY>0.10</researchViewY>
     </ResearchProjectDef>
 
-    <!-- Growing Zones -->
-    <ResearchProjectDef>
-        <defName>ResearchAreas_GrowingZones</defName>
-        <label>Agricultural Planning</label>
-        <description>Learn to designate and manage areas for crop cultivation and farming.</description>
-        <baseCost>200</baseCost>
-        <techLevel>Neolithic</techLevel>
-        <tab>ResearchTab</tab>
-    </ResearchProjectDef>
-
-    <!-- Animal Areas -->
-    <ResearchProjectDef>
-        <defName>ResearchAreas_AnimalAreas</defName>
-        <label>Animal Husbandry</label>
-        <description>Develop techniques for managing animal territories and sleeping areas.</description>
-        <baseCost>300</baseCost>
-        <techLevel>Neolithic</techLevel>
-        <tab>ResearchTab</tab>
-    </ResearchProjectDef>
-
-    <!-- Home Areas -->
+    <!-- Home Area -->
     <ResearchProjectDef>
         <defName>ResearchAreas_Home</defName>
-        <label>Settlement Planning</label>
-        <description>Master the art of designating home territories and settlement boundaries for firefighting and defense.</description>
-        <baseCost>200</baseCost>
+        <label>Domestication</label>
+        <description>Your people learn to establish permanent settlements and mark territories as their own. Through shared customs and rituals, they develop a sense of belonging and identity within their new home.
+
+Unlocks:
+• Home Area creation and modification</description>
+        <baseCost>100</baseCost>
         <techLevel>Neolithic</techLevel>
-        <tab>ResearchTab</tab>
+        <tab>ResearchAreas_AreaManagement</tab>
+        <researchViewX>1.00</researchViewX>
+        <researchViewY>0.10</researchViewY>
     </ResearchProjectDef>
 
-    <!-- No Roof Areas -->
+    <!-- Tier 2: Specialized Areas (Cost: 200-300) -->
+    
+    <!-- Agricultural Planning -->
+    <ResearchProjectDef>
+        <defName>ResearchAreas_GrowingZones</defName>
+        <label>Agriculture</label>
+        <description>Master the cultivation of crops through systematic farming. Your people learn to prepare soil, plant seeds, and harvest yields, moving beyond mere subsistence to sustainable food production.
+
+Unlocks:
+• Growing Zone creation and management</description>
+        <baseCost>150</baseCost>
+        <techLevel>Neolithic</techLevel>
+        <tab>ResearchAreas_AreaManagement</tab>
+        <researchViewX>1.00</researchViewX>
+        <researchViewY>0.80</researchViewY>
+    </ResearchProjectDef>
+
+    <!-- Snow Removal Planning -->
+    <ResearchProjectDef>
+        <defName>ResearchAreas_SnowRemovalPlanning</defName>
+        <label>Excavation</label>
+        <description>Your people discover the techniques to systematically excavate accumulated snow and sand from important areas. Armed with simple digging tools and organized labor, they become proficient at clearing obstacles and maintaining vital pathways and workspaces.
+
+Unlocks:
+• Snow/Sand Clear Area creation and removal</description>
+        <baseCost>200</baseCost>
+        <techLevel>Neolithic</techLevel>
+        <tab>ResearchAreas_AreaManagement</tab>
+        <researchViewX>2.00</researchViewX>
+        <researchViewY>1.30</researchViewY>
+    </ResearchProjectDef>
+
+    <!-- Complex Roofing -->
     <ResearchProjectDef>
         <defName>ResearchAreas_NoRoof</defName>
         <label>Complex Roofing</label>
-        <description>Learn to designate areas for temperature regulation.</description>
+        <description>Learn to work with building materials and manage roofing strategically. Your builders develop techniques for deciding which areas should be covered for protection and which should remain open to the sky.
+
+Unlocks:
+• No-Roof Area designation
+• Build-Roof Area designation
+• Ignore-Roof Area designation</description>
         <baseCost>300</baseCost>
         <techLevel>Neolithic</techLevel>
-        <tab>ResearchTab</tab>
+        <tab>ResearchAreas_AreaManagement</tab>
+        <researchViewX>1.00</researchViewX>
+        <researchViewY>1.40</researchViewY>
     </ResearchProjectDef>
 
-    <!-- Allowed Areas (Custom Zones) -->
+    <!-- Pollution Removal -->
+    <ResearchProjectDef>
+        <defName>ResearchAreas_PollutionRemoval</defName>
+        <label>Sanitation</label>
+        <description>Your colony learns the importance of cleanliness and waste management. Through careful disposal of waste and contaminated material, you prevent disease and maintain the health of your people.
+
+Unlocks:
+• Pollution Clear Area creation and removal</description>
+        <baseCost>300</baseCost>
+        <techLevel>Neolithic</techLevel>
+        <tab>ResearchAreas_AreaManagement</tab>
+        <researchViewX>2.00</researchViewX>
+        <researchViewY>0.70</researchViewY>
+        <prerequisites>
+            <li>ResearchAreas_SnowRemovalPlanning</li>
+        </prerequisites>
+    </ResearchProjectDef>
+
+    <!-- Tier 3: Advanced (Cost: 400+) -->
+    
+    <!-- Social Organization -->
     <ResearchProjectDef>
         <defName>ResearchAreas_Allowed</defName>
-        <label>Social Organization</label>
-        <description>Unlock the ability to create custom allowed areas for precise colonist movement control and social organization.</description>
-        <baseCost>600</baseCost>
+        <label>Government</label>
+        <description>Your civilization advances beyond simple tribal structures. Your leaders establish laws and customs that define which people can access certain areas, creating order and structure within society.
+
+Unlocks:
+• Custom Allowed Area creation and modification</description>
+        <baseCost>400</baseCost>
         <techLevel>Neolithic</techLevel>
-        <tab>ResearchTab</tab>
+        <tab>ResearchAreas_AreaManagement</tab>
+        <researchViewX>2.00</researchViewX>
+        <researchViewY>0.10</researchViewY>
         <prerequisites>
             <li>ResearchAreas_Home</li>
         </prerequisites>

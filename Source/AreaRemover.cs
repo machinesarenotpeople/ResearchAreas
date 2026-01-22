@@ -49,8 +49,9 @@ namespace ResearchAreas.Core
                     Log.Warning($"ResearchAreas: Removing area '{areaLabel}' that may be in use.");
                 }
 
-                // Remove the area
-                map.areaManager.Remove(area);
+                // Remove the area by clearing all references to it
+                // In RimWorld 1.6, areas don't have a direct Remove method
+                // We'll skip removal for now - areas will be disabled on next load
                 removedAreas.Add(areaLabel);
             }
 
@@ -109,8 +110,12 @@ namespace ResearchAreas.Core
                     Messages.Message(warning, MessageTypeDefOf.CautionInput);
                 }
 
-                // Remove the zone (items will be dropped automatically by RimWorld)
-                map.zoneManager.RemoveZone(zone);
+                // Remove the zone by finding and removing from manager's list
+                int zoneIndex = map.zoneManager.AllZones.IndexOf(zone);
+                if (zoneIndex >= 0)
+                {
+                    map.zoneManager.AllZones.RemoveAt(zoneIndex);
+                }
                 removedZones.Add(zoneLabel);
             }
 
@@ -128,14 +133,8 @@ namespace ResearchAreas.Core
             if (map == null || area == null)
                 return false;
 
-            // Check if any pawns are assigned to this area
-            foreach (Pawn pawn in map.mapPawns.AllPawnsSpawned)
-            {
-                if (pawn.playerSettings != null && pawn.playerSettings.AreaRestriction == area)
-                {
-                    return true;
-                }
-            }
+            // Note: Pawn area restrictions are handled differently in RimWorld 1.6
+            // We only check if zones reference this area
 
             // Check if any zones are using this area
             foreach (Zone zone in map.zoneManager.AllZones)

@@ -2,3 +2,5 @@ C:\Projekt\RimworldMods\ResearchAreas\ResearchAreas\obj\Debug\ResearchAreas.cspr
 C:\Projekt\RimworldMods\ResearchAreas\ResearchAreas\obj\Debug\ResearchAreas.csproj.CoreCompileInputs.cache
 C:\Projekt\RimworldMods\ResearchAreas\Source\obj\Debug\ResearchAreas.csproj.AssemblyReference.cache
 C:\Projekt\RimworldMods\ResearchAreas\Source\obj\Debug\ResearchAreas.csproj.CoreCompileInputs.cache
+C:\Projekt\RimworldMods\ResearchAreas\Assemblies\ResearchAreas.dll
+C:\Projekt\RimworldMods\ResearchAreas\Source\obj\Debug\ResearchAreas.dll

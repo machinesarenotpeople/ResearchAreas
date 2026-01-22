@@ -13,10 +13,11 @@ namespace ResearchAreas.Settings
         // Toggle research requirements per area type
         public bool requireStockpileResearch = true;
         public bool requireGrowingResearch = true;
-        public bool requireAnimalResearch = true;
         public bool requireHomeResearch = true;
         public bool requireNoRoofResearch = true;
         public bool requireAllowedResearch = true;
+        public bool requireSnowRemovalResearch = true;
+        public bool requirePollutionRemovalResearch = true;
 
         // Area removal settings
         public bool removeInvalidAreasOnLoad = true;
@@ -33,6 +34,15 @@ namespace ResearchAreas.Settings
         // Custom area name mappings (area label -> area type key)
         public Dictionary<string, string> customAreaMappings = new Dictionary<string, string>();
 
+        // Configurable research costs
+        public int costPottery = 100;
+        public int costDomestication = 150;
+        public int costAgriculture = 150;
+        public int costShoveling = 200;
+        public int costComplexRoofing = 300;
+        public int costSanitation = 300;
+        public int costGovernment = 400;
+
         public override void ExposeData()
         {
             base.ExposeData();
@@ -40,10 +50,11 @@ namespace ResearchAreas.Settings
             // Research toggles
             Scribe_Values.Look(ref requireStockpileResearch, "requireStockpileResearch", true);
             Scribe_Values.Look(ref requireGrowingResearch, "requireGrowingResearch", true);
-            Scribe_Values.Look(ref requireAnimalResearch, "requireAnimalResearch", true);
             Scribe_Values.Look(ref requireHomeResearch, "requireHomeResearch", true);
             Scribe_Values.Look(ref requireNoRoofResearch, "requireNoRoofResearch", true);
             Scribe_Values.Look(ref requireAllowedResearch, "requireAllowedResearch", true);
+            Scribe_Values.Look(ref requireSnowRemovalResearch, "requireSnowRemovalResearch", true);
+            Scribe_Values.Look(ref requirePollutionRemovalResearch, "requirePollutionRemovalResearch", true);
 
             // Removal settings
             Scribe_Values.Look(ref removeInvalidAreasOnLoad, "removeInvalidAreasOnLoad", true);
@@ -63,6 +74,15 @@ namespace ResearchAreas.Settings
             {
                 customAreaMappings = new Dictionary<string, string>();
             }
+
+            // Research costs
+            Scribe_Values.Look(ref costPottery, "costPottery", 100);
+            Scribe_Values.Look(ref costDomestication, "costDomestication", 150);
+            Scribe_Values.Look(ref costAgriculture, "costAgriculture", 150);
+            Scribe_Values.Look(ref costShoveling, "costShoveling", 200);
+            Scribe_Values.Look(ref costComplexRoofing, "costComplexRoofing", 300);
+            Scribe_Values.Look(ref costSanitation, "costSanitation", 300);
+            Scribe_Values.Look(ref costGovernment, "costGovernment", 400);
         }
     }
 
@@ -86,26 +106,52 @@ namespace ResearchAreas.Settings
             listing.Label("Research Requirements");
             listing.GapLine();
 
-            Settings.requireStockpileResearch = listing.CheckboxLabeled("Require Stockpile Research", Settings.requireStockpileResearch, "Require research to create stockpile zones");
-            Settings.requireGrowingResearch = listing.CheckboxLabeled("Require Growing Research", Settings.requireGrowingResearch, "Require research to create growing zones");
-            Settings.requireAnimalResearch = listing.CheckboxLabeled("Require Animal Research", Settings.requireAnimalResearch, "Require research to create animal areas");
-            Settings.requireHomeResearch = listing.CheckboxLabeled("Require Home Research", Settings.requireHomeResearch, "Require research to use Home area (note: Home area always exists)");
-            Settings.requireNoRoofResearch = listing.CheckboxLabeled("Require No Roof Research", Settings.requireNoRoofResearch, "Require research to create no-roof areas");
-            Settings.requireAllowedResearch = listing.CheckboxLabeled("Require Allowed Research", Settings.requireAllowedResearch, "Require research to create custom allowed areas");
+            listing.CheckboxLabeled("Require Stockpile Research", ref Settings.requireStockpileResearch);
+            listing.CheckboxLabeled("Require Growing Research", ref Settings.requireGrowingResearch);
+            listing.CheckboxLabeled("Require Home Research", ref Settings.requireHomeResearch);
+            listing.CheckboxLabeled("Require No Roof Research", ref Settings.requireNoRoofResearch);
+            listing.CheckboxLabeled("Require Allowed Research", ref Settings.requireAllowedResearch);
+            listing.CheckboxLabeled("Require Snow Removal Research", ref Settings.requireSnowRemovalResearch);
+            listing.CheckboxLabeled("Require Pollution Removal Research", ref Settings.requirePollutionRemovalResearch);
 
             listing.Gap();
             listing.Label("Area Removal Settings");
             listing.GapLine();
 
-            Settings.removeInvalidAreasOnLoad = listing.CheckboxLabeled("Remove Invalid Areas on Load", Settings.removeInvalidAreasOnLoad, "Automatically remove areas without required research when loading saves");
-            Settings.showRemovalWarnings = listing.CheckboxLabeled("Show Removal Warnings", Settings.showRemovalWarnings, "Show warnings when removing areas that contain items (items will be dropped on the ground)");
+            listing.CheckboxLabeled("Remove Invalid Areas on Load", ref Settings.removeInvalidAreasOnLoad);
+            listing.CheckboxLabeled("Show Removal Warnings", ref Settings.showRemovalWarnings);
+
+            listing.Gap();
+            listing.Label("Research Costs");
+            listing.GapLine();
+
+            listing.Label($"Pottery: {Settings.costPottery}");
+            Settings.costPottery = (int)listing.Slider(Settings.costPottery, 1, 1000);
+            
+            listing.Label($"Domestication: {Settings.costDomestication}");
+            Settings.costDomestication = (int)listing.Slider(Settings.costDomestication, 1, 1000);
+            
+            listing.Label($"Agriculture: {Settings.costAgriculture}");
+            Settings.costAgriculture = (int)listing.Slider(Settings.costAgriculture, 1, 1000);
+            
+            listing.Label($"Shoveling: {Settings.costShoveling}");
+            Settings.costShoveling = (int)listing.Slider(Settings.costShoveling, 1, 1000);
+            
+            listing.Label($"Complex Roofing: {Settings.costComplexRoofing}");
+            Settings.costComplexRoofing = (int)listing.Slider(Settings.costComplexRoofing, 1, 1000);
+            
+            listing.Label($"Sanitation: {Settings.costSanitation}");
+            Settings.costSanitation = (int)listing.Slider(Settings.costSanitation, 1, 1000);
+            
+            listing.Label($"Government: {Settings.costGovernment}");
+            Settings.costGovernment = (int)listing.Slider(Settings.costGovernment, 1, 1000);
 
             listing.Gap();
             listing.Label("UI Settings");
             listing.GapLine();
 
-            Settings.showTooltips = listing.CheckboxLabeled("Show Tooltips", Settings.showTooltips, "Show tooltips explaining research requirements");
-            Settings.showVisualIndicators = listing.CheckboxLabeled("Show Visual Indicators", Settings.showVisualIndicators, "Show visual indicators (grayed out buttons, lock icons) for locked areas");
+            listing.CheckboxLabeled("Show Tooltips", ref Settings.showTooltips);
+            listing.CheckboxLabeled("Show Visual Indicators", ref Settings.showVisualIndicators);
 
             listing.Gap();
             listing.Label("Custom Area Name Mappings");

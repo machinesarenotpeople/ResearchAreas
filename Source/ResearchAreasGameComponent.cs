@@ -26,6 +26,9 @@ namespace ResearchAreas.Core
         {
             base.FinalizeInit();
             
+            // Apply configured research costs from settings
+            ResearchChecker.ApplyConfiguredCosts();
+            
             // Refresh research cache
             ResearchChecker.RefreshCache();
             
@@ -43,6 +46,9 @@ namespace ResearchAreas.Core
         public override void LoadedGame()
         {
             base.LoadedGame();
+            
+            // Apply configured research costs from settings
+            ResearchChecker.ApplyConfiguredCosts();
             
             // Refresh research cache
             ResearchChecker.RefreshCache();
