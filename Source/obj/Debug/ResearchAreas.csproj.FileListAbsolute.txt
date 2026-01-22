@@ -1,0 +1,4 @@
+C:\Projekt\RimworldMods\ResearchAreas\ResearchAreas\obj\Debug\ResearchAreas.csproj.AssemblyReference.cache
+C:\Projekt\RimworldMods\ResearchAreas\ResearchAreas\obj\Debug\ResearchAreas.csproj.CoreCompileInputs.cache
+C:\Projekt\RimworldMods\ResearchAreas\Source\obj\Debug\ResearchAreas.csproj.AssemblyReference.cache
+C:\Projekt\RimworldMods\ResearchAreas\Source\obj\Debug\ResearchAreas.csproj.CoreCompileInputs.cache
