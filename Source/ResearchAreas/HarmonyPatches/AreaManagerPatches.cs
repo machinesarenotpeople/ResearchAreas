@@ -12,7 +12,7 @@ namespace ResearchAreas.HarmonyPatches
     {
         static AreaManagerPatches()
         {
-            var harmony = new Harmony("YourName.ResearchAreas");
+            var harmony = new Harmony("dyscopia.ResearchAreas");
             harmony.PatchAll();
         }
 

@@ -135,7 +135,7 @@ namespace ResearchAreas.Core
             // Check if any zones are using this area
             foreach (Zone zone in map.zoneManager.AllZones)
             {
-                if (zone is Zone_Stockpile stockpile && stockpile.GetZoneLabel() == area.Label)
+                if (zone is Zone_Stockpile stockpile && stockpile.label == area.Label)
                 {
                     // Check if stockpile has items
                     if (stockpile.AllContainedThings.Any())
@@ -143,7 +143,7 @@ namespace ResearchAreas.Core
                         return true;
                     }
                 }
-                else if (zone is Zone_Growing growing && growing.GetZoneLabel() == area.Label)
+                else if (zone is Zone_Growing growing && growing.label == area.Label)
                 {
                     // Check if growing zone has plants
                     if (growing.AllContainedThings.Any())

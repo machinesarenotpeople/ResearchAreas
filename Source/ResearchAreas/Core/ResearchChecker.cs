@@ -12,7 +12,6 @@ namespace ResearchAreas.Core
     {
         private static Dictionary<string, ResearchProjectDef> areaResearchMap;
         private static Dictionary<string, bool> researchCache;
-        private static bool cacheInitialized = false;
 
         /// <summary>
         /// Initialize the mapping between area types and research projects.
@@ -49,6 +48,11 @@ namespace ResearchAreas.Core
         public static bool IsAreaAllowed(Area area)
         {
             if (area == null)
+                return true;
+
+            // Home area is always allowed - it's a special system area
+            Map map = Find.CurrentMap;
+            if (map != null && map.areaManager != null && area == map.areaManager.Home)
                 return true;
 
             string areaKey = GetAreaKey(area);
@@ -128,18 +132,23 @@ namespace ResearchAreas.Core
             if (area == null)
                 return null;
 
+            // Home area is handled separately in IsAreaAllowed
+            Map map = Find.CurrentMap;
+            if (map != null && map.areaManager != null && area == map.areaManager.Home)
+                return "Home";
+
             // Check area label - Rimworld areas are identified by their labels
             string label = area.Label?.ToLower() ?? "";
             
-            // Home area
-            if (label == "home" || area == Find.CurrentMap?.areaManager?.Home)
+            // Home area (by label)
+            if (label == "home")
                 return "Home";
             
-            // Stockpile areas
+            // Stockpile areas - check label and associated zones
             if (label.Contains("stockpile"))
                 return "Stockpile";
             
-            // Growing zones
+            // Growing zones - check label and associated zones
             if (label.Contains("growing"))
                 return "Growing";
             
@@ -152,28 +161,30 @@ namespace ResearchAreas.Core
                 return "AnimalAllowed";
             
             // No roof areas
-            if (label.Contains("no roof") || label.Contains("noroof"))
+            if (label.Contains("no roof") || label.Contains("noroof") || label.Contains("no-roof"))
                 return "NoRoof";
 
-            // Check if this is a zone-based area by checking the map's zones
-            // Note: This might not work in all contexts, but it's a fallback
-            try
+            // Check if this area is associated with a zone (more reliable detection)
+            // This is a fallback for areas that might be created with custom names
+            if (map != null && map.zoneManager != null)
             {
-                Map map = Find.CurrentMap;
-                if (map != null && map.zoneManager != null)
+                try
                 {
                     foreach (Zone zone in map.zoneManager.AllZones)
                     {
-                        if (zone is Zone_Stockpile stockpile && stockpile.label == area.Label)
-                            return "Stockpile";
-                        if (zone is Zone_Growing growing && growing.label == area.Label)
-                            return "Growing";
+                        if (zone.label == area.Label)
+                        {
+                            if (zone is Zone_Stockpile)
+                                return "Stockpile";
+                            if (zone is Zone_Growing)
+                                return "Growing";
+                        }
                     }
                 }
-            }
-            catch
-            {
-                // If we can't access the map, continue with default logic
+                catch
+                {
+                    // If we can't access zones, continue with default logic
+                }
             }
 
             // Default: treat as custom allowed area (requires Allowed research)
@@ -189,7 +200,6 @@ namespace ResearchAreas.Core
             {
                 researchCache.Clear();
             }
-            cacheInitialized = false;
         }
 
         /// <summary>
@@ -197,7 +207,15 @@ namespace ResearchAreas.Core
         /// </summary>
         public static void RefreshCache()
         {
-            ClearCache();
+            if (researchCache == null)
+            {
+                researchCache = new Dictionary<string, bool>();
+            }
+            else
+            {
+                researchCache.Clear();
+            }
+
             if (areaResearchMap != null)
             {
                 foreach (var kvp in areaResearchMap)
@@ -208,7 +226,6 @@ namespace ResearchAreas.Core
                     }
                 }
             }
-            cacheInitialized = true;
         }
     }
 }
